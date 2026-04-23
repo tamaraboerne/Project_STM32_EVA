@@ -1,67 +1,63 @@
 # Technical Design Report: Project_STM32_EVA
-
-**Author:** Tamara Boerner  
-**Platform:** STM32 (ARM Cortex-M4)  
-**Objective:** To design and implement a modular embedded system for real-time environmental data acquisition and processing.
+ 
+**Platform:** STM32 (ARM Cortex-M4), FreeRTOS (CMSIS-RTOS V2)  
+**Objective:** Design and implementation of a modular, real-time multi-tasking environmental monitoring system.
 
 ## 1. Project Motivation
-The objective of this project is to apply advanced embedded software engineering principles to a modular environmental monitoring system. This project serves as a technical evolution of previous academic work, addressing architectural challenges encountered during earlier prototyping phases (e.g., peripheral driver stability).
+Using **FreeRTOS (CMSIS-RTOS V2)** allows for deterministic system behavior, where time-critical tasks (sensor acquisition, safety protocols) can execute independently of slower background processes (UI, data logging). This architecture shifts the system from a simple procedural loop to an event-driven, concurrent design.
 
 **Development Roadmap:**
-* **Phase 1:** Local Sensor Fusion and HMI (Human-Machine Interface).
-* **Phase 2:** Connectivity Integration (WLAN/Bluetooth).
-* **Phase 3:** Real-Time Operating System (RTOS) migration to Zephyr.
+* **Phase 1:** RTOS & Task Architecture.
+* **Phase 2:** Implementation of IPC (Queues/Mutex) for Sensor Fusion & HMI.
+* **Phase 3:** Connectivity (Wireless)
+
+---
 
 ## 2. Requirements Specification
 
-This section defines the technical and functional requirements for Project_STM32_EVA. It establishes the system's operational scope, hardware boundaries, and design constraints. By formalizing these specifications, we ensure a structured development process that prioritizes modularity, reliability, and deterministic system behavior, providing a clear roadmap for both implementation and verification.
-
 ### 2.1 Tech Stack
 * **Microcontroller:** STM32F401RE (Nucleo-64)
-* **Peripherals:** OLED Display, 4x4 Matrix Keypad, Trimm Potentiometer, Tactile Push-Button, BME280 (I2C), Light Sensor (LDR), Piezo Buzzer, Status LEDs.
+* **OS / Middleware:** FreeRTOS (CMSIS-RTOS V2), STM32 HAL
+* **Peripherals:** OLED (SPI), 4x4 Matrix Keypad (GPIO), BME280 (I2C), LDR, Buzzer.
 
-### 2.2 Hardware Interface
-| Component | Protocol | Purpose |
+### 2.2 Task Architecture (FreeRTOS)
+To maintain high system responsiveness, core functions are divided into dedicated tasks:
+
+| Task Name | Priority | Purpose |
 | :--- | :--- | :--- |
-| **BME280** | I2C | Environmental sensing (T, P, H) |
-| **OLED Display** | SPI | UI feedback |
-| **Matrix Keypad** | GPIO | Security code and threshold entry |
-| **Potentiometer** | ADC | Manual threshold adjustment |
-| **Piezo/LEDs** | GPIO/PWM | Alarm signaling & State indication |
+| **SystemTask** | Real-Time | State Machine management and system health monitoring. |
+| **SensorTask** | Medium | Periodic sampling (BME280, LDR) and signal filtering. |
+| **UITask** | Low | OLED updates, keypad scanning, and user feedback. |
+| **SafetyTask** | High | Hardware Watchdog management and Emergency STOP logic. |
 
-### 2.3 User Experience (UX) Goals
-* **Security:** The system remains `LOCKED` until a valid 4-digit code is input via the keypad.
-* **Safety:** A dedicated physical button implements a "Global Reset/Emergency STOP."
-* **Power Awareness:** Automatic screen-saver mode (Display OFF) triggered by the Light Sensor to prevent burn-in and minimize power consumption.
+---
 
-### 2.4 Design Constraints
-* **Language:** ISO C++17 (Object-Oriented Architecture).
-* **Reliability:** Hardware Watchdog Timer (WDT) enabled.
-* **Coding Standard:** Adherence to subset of MISRA C++ and LLVM standards for portability.
+## 3. Processing & Logic (Concurrent FSM)
 
-## 3. Processing & Logic (Finite State Machine)
+With the FreeRTOS integration, the **Finite State Machine (FSM)** has evolved from a sequential code block to a centralized controller task that processes events.
 
-The system architecture utilizes a Finite State Machine (FSM) to ensure deterministic behavior, robust error handling, and a clear separation of concerns. The FSM is categorized into **Operative Modes** (standard workflows) and **Safety/Exception Modes** (critical overrides).
+### 3.1 Inter-Process Communication (IPC)
+To ensure thread-safe data exchange, the following FreeRTOS primitives are utilized:
 
-### 3.1 State Definitions
+* **Queues:** For transferring keypad inputs and buffered sensor data packages between tasks.
+* **Mutex:** For protecting I2C bus access, preventing contention between the BME280 driver and other potential bus peripherals.
+* **Event Groups:** For signaling state transitions (e.g., triggering a transition from `RUNNING` to `ALARM`).
 
-| State | Category | Description |
+### 3.2 State Definitions & Behavior
+
+| State | Execution | Focus |
 | :--- | :--- | :--- |
-| **BOOT** | Operative | System initialization, Hardware Abstraction Layer (HAL) self-test, and sensor calibration. |
-| **LOCKED** | Operative | Idle/Standby state; prevents unauthorized access via a mandatory 4-digit security code. |
-| **RUNNING** | Operative | Standard data acquisition loop; real-time sensor processing and display updates. |
-| **ADJUST** | Operative | Configuration mode; enables parameter modification via potentiometer and keypad input. |
-| **ALARM** | Exception | Triggered by a threshold violation; activates audio/visual signaling requiring manual code clearance. |
-| **EMERGENCY** | Safety | Triggered by hardware interrupt; immediate cessation of all actuator operations for system safety. |
+| **BOOT** | One-time | Hardware initialization and task creation. |
+| **LOCKED** | Task `UITask` | Idle state, waiting for key input events. |
+| **RUNNING** | Task `SensorTask` | Cyclic data acquisition and streaming. |
+| **ADJUST** | Task `UITask` | Parameter modification; temporarily pauses sensor logic. |
+| **ALARM** | Task `SystemTask` | High-priority activation of audio/visual signaling. |
+| **EMERGENCY**| ISR / Task `Safety` | Immediate suspension of all operational tasks. |
 
-### 3.2 Design Notes
-* **Deterministic Transition:** State transitions are managed via a central control structure to prevent illegal state jumps and ensure system stability.
-* **Safety Priority:** The `EMERGENCY` state is mapped to an External Interrupt (EXTI), allowing it to bypass the main control loop and ensure immediate system response regardless of the current mode.
-* **Scalability:** The modular design of this FSM allows for the addition of future connectivity states (e.g., WLAN/Bluetooth integration) without restructuring the core logic.
-
-
-
-Useing FreeRTOS CMSIS_V2 + HAL 
+### 3.3 Design Notes
+* **Deterministic Transitions:** State changes are triggered by semaphores and event flags. If `SensorTask` detects a threshold violation, it sets a flag that `SystemTask` processes immediately.
+* **Safety Priority:** The `EMERGENCY` state is triggered directly from the Interrupt Service Routine (ISR) via *Task Notifications*, ensuring microsecond-level latency for system shutdowns.
+* **Resource Management:** All non-reentrant functions (specifically HAL I2C drivers) are wrapped within `Mutex` protection blocks to ensure data integrity.
 
 ---
 *Created by: Tamara Boerner*

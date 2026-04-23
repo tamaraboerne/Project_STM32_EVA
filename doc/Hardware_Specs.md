@@ -1,6 +1,6 @@
 # Hardware Design & Specifications: Project_STM32_EVA
 
-This document serves as the master record for the hardware architecture, Bill of Materials (BOM), and electrical interconnects for Project_EVA.
+**Platform:** STM32 (ARM Cortex-M4), FreeRTOS (CMSIS-RTOS V2)  
 
 ## 1. Bill of Materials (BOM)
 
@@ -32,11 +32,14 @@ This document serves as the master record for the hardware architecture, Bill of
 | **Piezo Buzzer (Signal)** | PA8 | PWM_OUT (TIM1) |
 | **Status LEDs (5x)** | PB2, PB4 - PB7 | GPIO_Output |
 
-## 3. Design Notes & Safety
-* **Power:** All sensors must operate at **3.3V**. Connect Nucleo GND to Breadboard GND rail.
-* **I2C Constraints:** OLED and BME280 share I2C1. Ensure address separation (0x3C for OLED). Add ~4.7kΩ pull-ups if not present on modules.
-* **Passive Buzzer:** This component requires a PWM signal (frequency) to generate sound.
-* **Current Limiting:** Use 220Ω - 330Ω resistors for all LEDs to protect GPIO pins.
+## 3. Design Notes & RTOS Integration
+
+* **Power:** All sensors must operate at **3.3V**. Ensure common ground between the Nucleo board and the breadboard rails to prevent signal noise.
+* **I2C Shared Bus (Thread-Safe Access):** The OLED and BME280 share the I2C1 bus. Under FreeRTOS, you **must** use a **Mutex** to prevent simultaneous access by different tasks (e.g., `SensorTask` and `UITask`).
+* **Emergency Interrupts (EXTI):** The Emergency Button (PA1) is connected via an External Interrupt. The ISR must not perform heavy processing; it should only send a *Task Notification* to the `SafetyTask` to ensure minimum latency.
+* **PWM Signaling:** The Passive Buzzer requires a stable frequency via TIM1. Ensure the `UITask` or `SystemTask` updates the Duty Cycle without blocking the scheduler.
+* **Current Limiting:** Use 220Ω - 330Ω resistors for all LEDs to protect GPIO pins and ensure valid logic levels.
+* **Pull-up Requirements:** Check your I2C modules; if they do not include built-in pull-ups, add ~4.7kΩ resistors to the SCL and SDA lines.
 
 ---
 *Created by: Tamara Boerner*
