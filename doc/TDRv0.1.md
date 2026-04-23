@@ -59,5 +59,9 @@ The system architecture utilizes a Finite State Machine (FSM) to ensure determin
 * **Safety Priority:** The `EMERGENCY` state is mapped to an External Interrupt (EXTI), allowing it to bypass the main control loop and ensure immediate system response regardless of the current mode.
 * **Scalability:** The modular design of this FSM allows for the addition of future connectivity states (e.g., WLAN/Bluetooth integration) without restructuring the core logic.
 
+
+
+Useing FreeRTOS CMSIS_V2 + HAL 
+
 ---
 *Created by: Tamara Boerner*

@@ -23,14 +23,14 @@ This document serves as the master record for the hardware architecture, Bill of
 
 | Peripheral | STM32 Pin | Function |
 | :--- | :--- | :--- |
-| **BME280 / OLED (SDA)** | PB9 | I2C1_SDA |
-| **BME280 / OLED (SCL)** | PB8 | I2C1_SCL |
+| **OLED (SDA)** | PB9 | I2C1_SDA |
+| **BME280** | PB8 | I2C1_SCL |
 | **Matrix Keypad (R1-R4)** | PC0 - PC3 | GPIO Input (Pull-up) |
 | **Matrix Keypad (C1-C4)** | PC4 - PC7 | GPIO Output |
 | **Potentiometer (Signal)**| PA0 | ADC1_IN0 |
 | **Emergency Button** | PA1 | GPIO_Input (EXTI) |
 | **Piezo Buzzer (Signal)** | PA8 | PWM_OUT (TIM1) |
-| **Status LEDs (5x)** | PA2 - PA6 | GPIO_Output |
+| **Status LEDs (5x)** | PB2, PB4 - PB7 | GPIO_Output |
 
 ## 3. Design Notes & Safety
 * **Power:** All sensors must operate at **3.3V**. Connect Nucleo GND to Breadboard GND rail.
