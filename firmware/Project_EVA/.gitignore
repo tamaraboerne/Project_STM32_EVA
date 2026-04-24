@@ -1,0 +1,24 @@
+# --- Build-Artefakte ---
+Debug/
+Release/
+*.o
+*.d
+*.elf
+*.map
+*.hex
+*.bin
+*.srec
+*.su
+*.log
+
+# --- IDE-spezifische Dateien (STM32CubeIDE / Eclipse) ---
+.settings/
+.metadata/
+.tmp/
+*.launch
+.history/
+
+# --- System-Dateien ---
+.DS_Store       # macOS
+Thumbs.db       # Windows
+*~              # Editor Backups
