@@ -1,0 +1,27 @@
+/*
+ * display.hpp
+ *
+ *  Created on: 24.04.2026
+ *      Author: Tamara Boerner
+ */
+
+#ifndef APP_DISPLAY_DISPLAY_HPP_
+#define APP_DISPLAY_DISPLAY_HPP_
+
+#pragma once
+#include "main.h"			// contains HAL-Definitions
+#include "FreeRTOS.h"
+#include "semphr.h"
+
+namespace EVA {
+class SSD1306 {
+public:
+	SSD1306 (I2C_HandleTypeDef* i2cHandle, uint8_t devAddress);
+	void writeCommand (uint8_t command);
+private:
+	I2C_HandleTypeDef* hi2c;
+};
+}
+
+
+#endif /* APP_DISPLAY_DISPLAY_HPP_ */

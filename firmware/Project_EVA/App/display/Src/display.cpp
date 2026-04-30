@@ -1,0 +1,113 @@
+/*
+ * display.cpp
+ *
+ *  Created on: 24.04.2026
+ *      Author: Tamara Boerner
+ *      evtl. Nutzung der u(g2 Library
+ */
+
+#include "display.hpp"
+#include "font_5x7.hpp"
+#include <cstring>
+
+namespace EVA {
+
+SSD1306::SSD1306(I2C_HandleTypeDef* i2cHandle, uint8_t devAddress) : hi2c (i2cHandle), address(devAddress)
+{
+	// Initialize Mutex to protect I2C Bus
+	i2cMutex = xSemaphoreCreateMutex();
+}
+
+void SSD1306::clear() {
+	memset(buffer, 0, sizeof(buffer));
+}
+
+void SSD1306::update(){
+	for (uint8_t i = 0; i < 8; i++) {
+		writeCommand(0xB0 + i);				//set Paige
+		writeCommand(0x00);					//set low Column
+		writeCommand(0x10);					//set high Column
+
+		uint16_t bufferOffset = (uint16_t)i * 128;
+		// Send the 128 bytes for the current page from RAM to Display
+		writeData(&buffer[bufferOffset], 128);
+	}
+}
+
+void SSD1306::drawPixel(int16_t x, int16_t y, bool color) {
+	if (x < 0 || x >=128 || y < 0 || y >= 64) return;
+	if (color) buffer[x + (y / 8) * 128] |= (1 << (y % 8));
+	else buffer[x + (y / 8) * 128] &= ~(1 << (y % 8));
+}
+
+void SSD1306::writeCommand(uint8_t command){
+	//take Mutex with 10ms timeout
+	if (xSemaphoreTake(i2cMutex, pdMS_TO_TICKS(10)) == pdTRUE) {
+		//send command 0x00
+		HAL_I2C_Mem_Write(hi2c, address, 0x00, I2C_MEMADD_SIZE_8BIT, &command, 1, 100);
+		//release Mutex
+		xSemaphoreGive(i2cMutex);
+	}
+}
+
+void SSD1306::writeData(uint8_t* data, uint16_t size){
+	if (xSemaphoreTake(i2cMutex, pdMS_TO_TICKS(10)) == pdTRUE) {
+		//send data 0x40
+		HAL_I2C_Mem_Write(hi2c, address, 0x40, I2C_MEMADD_SIZE_8BIT, data, size, 100);
+		xSemaphoreGive(i2cMutex);
+	}
+}
+
+void SSD1306::writeChar(int16_t x, int16_t y, char ch, bool color) {
+	if (ch < 32 || ch > 126) return; // Only support standard ASCII
+
+	// Offset in font table: (Character - Space) * 5 bytes per char
+	uint16_t fontIndex = (ch - 32) * 5;
+
+	for (uint8_t i = 0; i < 5; i++) { // 5 columns wide
+	    uint8_t column = font5x7[fontIndex + i];
+	    for (uint8_t j = 0; j < 8; j++) { // 8 bits high
+	        if (column & (1 << j)) {
+	            drawPixel(x + i, y + j, color);
+	        }
+	    }
+	}
+}
+
+void SSD1306::writeString(int16_t x, int16_t y, const char* str, bool color) {
+	while (*str) {
+	    writeChar(x, y, *str, color);
+	    x += 6; // Move 5 pixels for the char + 1 pixel for spacing
+	    str++;
+	    if (x > 122) break; // Simple wrap-around prevention
+	}
+}
+
+void SSD1306::init(){
+	uint8_t init_Sequence[] = {
+			0xAE,			//Display OFF
+			0x20, 0x02,		//set Page addressing Mode
+			0x81, 0xCF,		//set contrast Control
+			0xA0,           // Segment Remap (0xA0 = left, 0xA1 = right)
+			0xC0,           // COM Scan Direction (0xC0 = top, 0xC8 = buttom)
+			0xA8, 0x3F,		//set Multiplex Ratio (1/64)
+			0xD3, 0x00,		//set Display OFFSET
+			0xD5, 0x80,		//set Display Clock divide ratio
+			0xD9, 0xF1,		//set Pre-charge Period
+			0xDA, 0x12,		//set COM pins HW Configuration
+			0xDB, 0x40,		//set VCOMH Deselect Level
+			0x81, 0xFF,		//set Contrast to maximum
+			0x8D, 0x14,		//set Enable charge pump
+			0xAF			//Display ON
+	};
+
+	for (uint8_t i = 0; i < sizeof(init_Sequence); i++){
+		 writeCommand(init_Sequence[i]);
+	}
+
+}
+
+
+} //namespace EVA
+
+

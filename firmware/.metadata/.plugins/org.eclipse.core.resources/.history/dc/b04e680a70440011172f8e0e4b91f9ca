@@ -1,0 +1,84 @@
+/*
+ * display.hpp
+ *
+ *  Created on: 24.04.2026
+ *      Author: Tamara Boerner
+ *      Description: SSD1306 Display driver for STM32 using FreeRTOS.
+ */
+
+#pragma once
+#include "main.h"			// contains HAL-Definitions
+#include "FreeRTOS.h"
+#include "semphr.h"
+
+namespace EVA {
+
+class SSD1306 {
+
+public:
+
+	/**
+	* @brief Constructor
+	* @param i2cHandle Pointer to the HAL I2C handle
+	* @param devAddress The I2C address of the device (e.g., 0x3C << 1)
+	*/
+	SSD1306 (I2C_HandleTypeDef* i2cHandle, uint8_t devAddress);
+
+	/**
+	* @brief Initializes the display hardware with default settings.
+	*/
+	void init();
+
+	/**
+	* @brief Sends a single command to the display. Thread-safe.
+	* @param command The command byte to send
+	*/
+	void writeCommand (uint8_t command);
+
+	/**
+	* @brief Sends data buffer to the display. Thread-safe.
+	* @param data Pointer to the data array
+	* @param size Size of the data buffer
+	*/
+	void writeData (uint8_t* data, uint16_t size);
+
+	/**
+	 * @brief Clears the local RAM buffer (all pixels OFF).
+	 * @note  Call update() after this to clear the actual hardware screen.
+	 */
+	void clear();
+
+	/**
+	 * @brief Draws a single pixel in the local buffer.
+	 * @param x Horizontal coordinate (0 to 127).
+	 * @param y Vertical coordinate (0 to 63).
+	 * @param color True to turn pixel ON (white), False to turn OFF (black).
+	 */
+	void drawPixel(uint16_t x, uint16_t y, bool color);
+
+	/**
+	 * @brief Flushes the local RAM buffer to the SSD1306 hardware via I2C.
+	 * @details Iterates through all 8 pages and sends 128 bytes per page.
+	 */
+	void update();
+
+	/**
+	 * @brief Displays a hardcoded "Welcome!" message or splash screen.
+	 * @details This is a test function used to verify that the framebuffer,
+	 * pixel mapping, and I2C communication are all functioning
+	 * correctly by drawing a predefined pattern or text.
+	 */
+	void showWelcome();
+
+private:
+	I2C_HandleTypeDef* hi2c;
+	uint8_t address;
+	SemaphoreHandle_t i2cMutex;
+	uint8_t buffer[1024];
+};
+
+
+extern SSD1306 display;
+
+}
+

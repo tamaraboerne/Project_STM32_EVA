@@ -1,0 +1,52 @@
+/*
+ * display.hpp
+ *
+ *  Created on: 24.04.2026
+ *      Author: Tamara Boerner
+ *      Description: SSD1306 Display driver for STM32 using FreeRTOS.
+ */
+
+#pragma once
+#include "main.h"			// contains HAL-Definitions
+#include "FreeRTOS.h"
+#include "semphr.h"
+
+namespace EVA {
+
+class SSD1306 {
+
+public:
+
+	/**
+	* @brief Constructor
+	* @param i2cHandle Pointer to the HAL I2C handle
+	* @param devAddress The I2C address of the device (e.g., 0x3C << 1)
+	*/
+	SSD1306 (I2C_HandleTypeDef* i2cHandle, uint8_t devAddress);
+
+	/**
+	* @brief Initializes the display hardware with default settings.
+	*/
+	void init();
+
+	/**
+	* @brief Sends a single command to the display. Thread-safe.
+	* @param command The command byte to send
+	*/
+	void writeCommand (uint8_t command);
+
+	/**
+	* @brief Sends data buffer to the display. Thread-safe.
+	* @param data Pointer to the data array
+	* @param size Size of the data buffer
+	*/
+	void writeData (uint8_t* data, uint16_t size);
+
+private:
+	I2C_HandleTypeDef* hi2c;
+	uint8_t address;
+	SemaphoreHandle_t i2cMutex;
+};
+
+}
+

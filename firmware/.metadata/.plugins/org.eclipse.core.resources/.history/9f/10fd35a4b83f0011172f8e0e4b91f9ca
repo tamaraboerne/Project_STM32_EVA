@@ -1,0 +1,18 @@
+/*
+ * display.hpp
+ *
+ *  Created on: 24.04.2026
+ *      Author: tboerner
+ */
+
+#ifndef APP_DISPLAY_DISPLAY_HPP_
+#define APP_DISPLAY_DISPLAY_HPP_
+
+#pragma once
+#include "main.h"			// contains HAL-Definitions
+#include "FreeRTOS.h"
+#include "semphr.h"
+
+
+
+#endif /* APP_DISPLAY_DISPLAY_HPP_ */

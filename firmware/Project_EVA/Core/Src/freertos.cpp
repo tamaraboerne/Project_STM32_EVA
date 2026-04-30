@@ -26,6 +26,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
+#include "display.hpp"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -114,10 +116,17 @@ void MX_FREERTOS_Init(void) {
 void StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN StartDefaultTask */
+	EVA::display.init();
+
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+	  EVA::display.clear();
+	  EVA::display.writeString(10, 15, "SYSTEM READY", true);
+	  EVA::display.writeString(40, 30, "WELCOME!", true);
+	  EVA::display.update();
+
+	  osDelay(5000);
   }
   /* USER CODE END StartDefaultTask */
 }

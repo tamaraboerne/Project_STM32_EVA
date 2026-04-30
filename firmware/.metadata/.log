@@ -1941,3 +1941,12 @@ java.lang.NullPointerException: Cannot invoke "org.eclipse.swt.widgets.Shell.set
 
 !ENTRY org.eclipse.cdt.core 1 0 2026-04-23 10:22:42.172
 !MESSAGE Indexed 'Project_EVA' (43 sources, 236 headers) in 3,58 sec: 21.914 declarations; 101.788 references; 1 unresolved inclusions; 341 syntax errors; 1.225 unresolved names (0,98 %)
+
+!ENTRY org.eclipse.cdt.core 1 0 2026-04-24 10:11:52.996
+!MESSAGE Indexed 'Project_EVA' (43 sources, 236 headers) in 3,81 sec: 21.913 declarations; 101.788 references; 1 unresolved inclusions; 341 syntax errors; 1.225 unresolved names (0,98 %)
+
+!ENTRY org.eclipse.cdt.core 1 0 2026-04-24 10:21:55.032
+!MESSAGE Indexed 'Project_EVA' (43 sources, 234 headers) in 3,68 sec: 21.403 declarations; 99.037 references; 8 unresolved inclusions; 534 syntax errors; 2.826 unresolved names (2,3 %)
+
+!ENTRY org.eclipse.cdt.core 1 0 2026-04-30 11:07:47.485
+!MESSAGE Indexed 'Project_EVA' (45 sources, 252 headers) in 4,63 sec: 22.573 declarations; 103.236 references; 1 unresolved inclusions; 341 syntax errors; 1.229 unresolved names (0,97 %)
