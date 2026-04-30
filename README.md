@@ -9,11 +9,16 @@ Project_EVA is a real-time environmental monitoring system designed to acquire, 
 ## Project Structure
 ```text
 Project_STM32_EVA/
-├── doc/              # Documentation (Technical Design Report, Hardware Specs)
-|   └── adr/          # Architecture Decision Records (Why we made our choices)
-├── firmware/         # STM32CubeIDE Project + Source Code
-├── hardware/         # Schematics, datasheets, photos
-└── README.md         # Project entry point
+├── doc/                    # Documentation (Technical Design Report, Hardware Specs)
+|   ├── display/            # Driver logic, font mapping, and addressing modes
+|   ├── fsm/                # State machine diagrams and logic descriptions    
+|   └── adr/                # Architecture Decision Records (Why we made our choices)
+├── firmware/               # the "heart" of the Project
+│   ├── App/                # Your custom logic (Display, Sensors, Keypad)
+│   ├── Core/               # STM32 generated code (HAL, main.c)
+│   └── Middlewares/        # FreeRTOS source files
+├── hardware/               # Schematics, datasheets, photos
+└── README.md               # Project entry point
 ```
 ## Key Features
 * **RTOS Architecture:** Multi-tasking design using FreeRTOS for concurrent sensor processing and HMI updates.
