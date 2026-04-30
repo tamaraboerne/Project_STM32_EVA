@@ -23,8 +23,8 @@
 
 | Peripheral | STM32 Pin | Function |
 | :--- | :--- | :--- |
-| **OLED (SDA)** | PB9 | I2C1_SDA |
-| **BME280** | PB8 | I2C1_SCL |
+| **OLED (SDA) / BME280** | PB9 | I2C1_SDA |
+| **OLED (SDA) / BME280** | PB8 | I2C1_SCL |
 | **Matrix Keypad (R1-R4)** | PC0 - PC3 | GPIO Input (Pull-up) |
 | **Matrix Keypad (C1-C4)** | PC4 - PC7 | GPIO Output |
 | **Potentiometer (Signal)**| PA0 | ADC1_IN0 |
