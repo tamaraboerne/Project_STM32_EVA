@@ -118,15 +118,29 @@ void StartDefaultTask(void *argument)
   /* USER CODE BEGIN StartDefaultTask */
 	EVA::display.init();
 
+	// 2. BOOT / SPLASH SCREEN (Einmalig)
+	EVA::display.clear();
+	EVA::display.writeString(30, 15, "SYSTEM READY", true);
+	EVA::display.writeString(55, 30, "***", true);
+	EVA::display.writeString(42, 45, "WELCOME!", true);
+	EVA::display.update();
+
+	osDelay(3000);
+
   /* Infinite loop */
   for(;;)
   {
 	  EVA::display.clear();
-	  EVA::display.writeString(10, 15, "SYSTEM READY", true);
-	  EVA::display.writeString(40, 30, "WELCOME!", true);
-	  EVA::display.update();
+	  // Hier fragst du später deine State Machine ab:
 
-	  osDelay(5000);
+	  // if(currentState == LOCKED) { ... }
+
+	  EVA::display.writeString(10, 5, "Mode: LOCKED", true);
+	  EVA::display.writeString(10, 25, "1: Unlock", true);
+	  EVA::display.writeString(10, 35, "2: Settings", true);
+
+	  EVA::display.update();
+	  osDelay(100);
   }
   /* USER CODE END StartDefaultTask */
 }
