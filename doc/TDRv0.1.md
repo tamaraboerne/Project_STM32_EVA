@@ -15,10 +15,12 @@ Using **FreeRTOS (CMSIS-RTOS V2)** allows for deterministic system behavior, whe
 
 ## 2. Requirements Specification
 
-### 2.1 Tech Stack
+### 2.1 Tech Stack (Update)
 * **Microcontroller:** STM32F401RE (Nucleo-64)
 * **OS / Middleware:** FreeRTOS (CMSIS-RTOS V2), STM32 HAL
-* **Peripherals:** OLED (SPI), 4x4 Matrix Keypad (GPIO), BME280 (I2C), LDR, Buzzer.
+* **Peripherals:** * **OLED (I2C):** SSD1306 128x64 using a custom-built Page-Addressing driver.
+    * **Matrix Keypad:** 4x4 GPIO scanning.
+    * **Sensors:** BME280 (I2C), LDR (ADC).
 
 ### 2.2 Task Architecture (FreeRTOS)
 To maintain high system responsiveness, core functions are divided into dedicated tasks:
@@ -58,6 +60,13 @@ To ensure thread-safe data exchange, the following FreeRTOS primitives are utili
 * **Deterministic Transitions:** State changes are triggered by semaphores and event flags. If `SensorTask` detects a threshold violation, it sets a flag that `SystemTask` processes immediately.
 * **Safety Priority:** The `EMERGENCY` state is triggered directly from the Interrupt Service Routine (ISR) via *Task Notifications*, ensuring microsecond-level latency for system shutdowns.
 * **Resource Management:** All non-reentrant functions (specifically HAL I2C drivers) are wrapped within `Mutex` protection blocks to ensure data integrity.
+
+### 3.4 HMI Logic & Visual Feedback
+To ensure low memory overhead, a custom **Bitmap-based Font Engine** was implemented. The display logic follows the FSM states to provide real-time user feedback:
+
+* **Splash Screen (BOOT):** Initial system check and "Welcome" display.
+* **Menu Navigation:** Hierarchical text-based interface for state transitions (Locked, Adjust, Set Time).
+* **Buffer Strategy:** A 1024-byte local RAM buffer is used to prevent I2C bus congestion. The display is refreshed only when `update()` is called by the `UITask`.
 
 ---
 *Created by: Tamara Boerner*
